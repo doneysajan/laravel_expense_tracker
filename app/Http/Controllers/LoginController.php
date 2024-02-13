@@ -33,4 +33,31 @@ class LoginController extends Controller
             return response()->json($response, 500);
         }
     }
+
+    public function login(Request $request)
+    {
+        if ($request->isMethod('post')) 
+        {
+            
+            $username=$request->input('email');
+            $password=$request->input('password');
+
+            $user=User::where('email', $username)->first();
+
+            if($user) {
+                if (password_verify($password, $user->password)) 
+                {
+                    $response=['success' => true, 'message'=>'Logged in'];
+                    return response()->json($response, 200);
+                } else {
+                    $response=['success' => false, 'message'=>'Incorrect password. Please try again.'];
+                    return response()->json($response, 401);
+                }
+            } 
+            else{
+                $response=['success' => false, 'message'=>'User not found. Please check your username.'];
+                return response()->json($response, 400);
+            }
+        }
+    }
 }
