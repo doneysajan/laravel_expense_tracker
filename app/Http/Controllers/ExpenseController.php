@@ -12,9 +12,17 @@ class ExpenseController extends Controller
     public function store(Request $request)
     {
 
-       
+        $request->validate([
+            'receipt' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048', // Adjust max file size and allowed file types as needed
+        ]);
+        if ($request->hasFile('receipt')) {
+            // Upload receipt
+            $file = $request->file('receipt');
+            $extension=$file->getClientOriginalExtension();
 
-
+            $filename=time().''.$extension;
+            $file->move('uploads/expense/',$filename);
+        }
         $amount = $request->input('amount');
         $date = $request->input('date');
         $paymentMethod = $request->input('payment');
@@ -22,6 +30,7 @@ class ExpenseController extends Controller
         $otherCategory = $request->input('othersTextBoxContainer');
         $merchantName = $request->input('merchantname');
         $notes = $request->input('notes');
+        $receipt = $request->input('receipt');
 
         if ($category == 'Others' && !empty($otherCategory)) {
             $newCategory = new Category();
@@ -38,6 +47,7 @@ class ExpenseController extends Controller
             $expense->maincategory = $category;
             $expense->merchantname = $merchantName;
             $expense->notes = $notes;
+            $expense->receipt = $filename;
             $expense->save();
 
             return response()->json(['success' => true, 'message' => 'Expense added successfully']);
@@ -49,6 +59,7 @@ class ExpenseController extends Controller
             $expense->maincategory = $category;
             $expense->merchantname = $merchantName;
             $expense->notes = $notes;
+            $expense->receipt = $filename;
             $expense->save();
 
             return response()->json(['success' => true, 'message' => 'Expense added successfully']);

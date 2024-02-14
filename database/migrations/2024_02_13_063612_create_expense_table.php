@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('maincategory');
             $table->string('merchantname');
             $table->text('notes')->nullable();
+            $table->string('receipt')->nullable();
             $table->timestamps();
         });
     }
