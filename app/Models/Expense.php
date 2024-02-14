@@ -15,6 +15,7 @@ class Expense extends Model
         'payment',
         'maincategory',
         'merchantname',
-        'notes'
+        'notes',
+        'receipt'
     ];
 }

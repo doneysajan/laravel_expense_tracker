@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('currency')->nullable();
             $table->integer('budget')->nullable();
             $table->string('password');
+            $table->string('profile')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->string('status')->default('PENDING');
