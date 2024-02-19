@@ -43,7 +43,8 @@ public function login(Request $request)
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-            $response = ['success' => true, 'fullname' => $user['fullname'], 'message' => 'Logged in'];
+            $API=$user->createToken('API-Token', ['server:update'])->plainTextToken;
+            $response = ['success' => true,'user_id' => $user->id, 'fullname' => $user['fullname'], 'API_Token' => $API,'message' => 'Logged in'];
             return response()->json($response, 200);
         } else {
             $response = ['success' => false, 'message' => 'Incorrect email or password. Please try again.'];
@@ -53,6 +54,7 @@ public function login(Request $request)
 
     $response = ['success' => false, 'message' => 'Invalid request.'];
     return response()->json($response, 400);
+}
 }
 
 
@@ -82,4 +84,4 @@ public function login(Request $request)
     //         }
     //     }
     //}
-}
+

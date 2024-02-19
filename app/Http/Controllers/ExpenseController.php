@@ -6,6 +6,13 @@ use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Expense;
 use Illuminate\Support\Facades\Session;
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
+}
+
 
 class ExpenseController extends Controller
 {
