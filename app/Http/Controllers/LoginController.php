@@ -42,7 +42,8 @@ public function login(Request $request)
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
-            $response = ['success' => true, 'message' => 'Logged in'];
+            $user = Auth::user();
+            $response = ['success' => true, 'fullname' => $user['fullname'], 'message' => 'Logged in'];
             return response()->json($response, 200);
         } else {
             $response = ['success' => false, 'message' => 'Incorrect email or password. Please try again.'];
