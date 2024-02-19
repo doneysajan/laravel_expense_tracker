@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ExpenseController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,13 +16,18 @@ use App\Http\Controllers\ExpenseController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route to get authenticated user
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
- 
+// Route for user registration
 Route::post('/register', [LoginController::class, 'register']);
+
+// Route for user login
 Route::post('/login', [LoginController::class, 'login']);
 
-Route::post('/store', [ExpenseController::class, 'store']);
-
+// Routes for storing expenses
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/store', [ExpenseController::class, 'store']);
+});
