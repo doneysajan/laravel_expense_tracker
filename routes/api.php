@@ -30,4 +30,9 @@ Route::post('/login', [LoginController::class, 'login']);
 // Routes for storing expenses
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/store', [ExpenseController::class, 'store']);
+    Route::get('/listing', [ExpenseController::class, 'listing']);
 });
+
+
+
+
