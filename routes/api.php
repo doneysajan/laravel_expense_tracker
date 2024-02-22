@@ -17,9 +17,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Route to get authenticated user
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
 
 // Route for user registration
 Route::post('/register', [LoginController::class, 'register']);
@@ -27,12 +27,14 @@ Route::post('/register', [LoginController::class, 'register']);
 // Route for user login
 Route::post('/login', [LoginController::class, 'login']);
 
-// Routes for storing expenses
+// Routes for storing, listing, updating, and deleting expenses
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/store', [ExpenseController::class, 'store']);
-    Route::get('/listing', [ExpenseController::class, 'listing']);
+    Route::post('/store', [ExpenseController::class, 'store']); // Store an expense
+    Route::get('/listing', [ExpenseController::class, 'listing']); // List all expenses
+  
+    Route::put('/editexpenses/{id}', [ExpenseController::class, 'update']);
+
+
+    Route::delete('/deleteexpenses', [ExpenseController::class, 'destroy']); // Delete an expense
 });
-
-
-
 

@@ -58,11 +58,48 @@ class ExpenseController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Expense added successfully']);
     }
+    
     public function listing(Request $request)
     {
-        $expenses=Expense::where('uid',$request->user()->id)->get();
+        $expenses = Expense::where('uid', $request->user()->id)->get();
         return response()->json($expenses);
     }
 
-   
+    public function update(Request $request, $id)
+    {
+        // Validate the request data
+        $request->validate([
+            'amount' => 'required|numeric',
+            'date' => 'required|date',
+            'payment' => 'required|string',
+            'maincategory' => 'required|string',
+            'merchantname' => 'required|string',
+            'notes' => 'nullable|string',
+            // Add validation rules for other updated fields
+        ]);
+    
+        // Find the expense by id
+        try {
+            $expense = Expense::findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Handle the case where the expense with the given ID is not found
+            return response()->json(['success' => false, 'message' => 'Expense not found'], 404);
+        }
+    
+        // Update the expense data
+        $expense->amount = $request->input('amount');
+        $expense->date = $request->input('date');
+        $expense->payment = $request->input('payment');
+        $expense->maincategory = $request->input('maincategory');
+        $expense->merchantname = $request->input('merchantname');
+        $expense->notes = $request->input('notes');
+        // Update other fields accordingly
+    
+        // Save the updated expense
+        $expense->save();
+    
+        // Return a success response
+        return response()->json(['success' => true, 'message' => 'Expense updated successfully']);
+    }
+    
 }
