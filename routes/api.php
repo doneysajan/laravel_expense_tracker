@@ -33,12 +33,15 @@ Route::post('/login', [LoginController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/store', [ExpenseController::class, 'store']);
     Route::get('/listing', [ExpenseController::class, 'listing']);
-    
+    Route::put('/editexpenses/{id}', [ExpenseController::class, 'update']);
+    Route::delete('/deleteexpense/{id}', [ExpenseController::class, 'destroy']);
 });
 
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/getUser', [LoginController::class, 'getUser']);
+Route::middleware('auth:sanctum')->post('/changePassword', [LoginController::class, 'changePassword']);
 Route::middleware('auth:sanctum')->post('/updateUser', [LoginController::class, 'updateUser']);
+Route::middleware('auth:sanctum')->post('/deactivateAccount', [LoginController::class, 'deactivateAccount']);
 
 
 
