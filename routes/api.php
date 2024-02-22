@@ -27,12 +27,10 @@ Route::post('/register', [LoginController::class, 'register']);
 // Route for user login
 Route::post('/login', [LoginController::class, 'login']);
 
-// Routes for storing, listing, updating, and deleting expenses
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/store', [ExpenseController::class, 'store']); // Store an expense
-    Route::get('/listing', [ExpenseController::class, 'listing']); // List all expenses
-  
-    Route::put('/editexpenses/{id}', [ExpenseController::class, 'update']);
+
+Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
+Route::middleware('auth:sanctum')->get('/getUser', [LoginController::class, 'getUser']);
+Route::middleware('auth:sanctum')->post('/updateUser', [LoginController::class, 'updateUser']);
 
 
     Route::delete('/deleteexpense/{id}', [ExpenseController::class, 'destroy']);
