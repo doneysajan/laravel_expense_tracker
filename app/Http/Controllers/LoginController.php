@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User; // Import the User model if not already imported
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
@@ -67,12 +68,11 @@ class LoginController extends Controller
     {
         $user = $request->user();
         //$userData=User::where('id',$request->user()->id);
-        // Check if the user exists
         if (!$user) {
             $response = ['success' => false, 'message' => 'User not found'];
             return response()->json($response, 404);
         }
-
+        
         // Update the user data
         $user->fullname = $request->input('fullname', $user->fullname);
         $user->email = $request->input('email', $user->email);
@@ -88,6 +88,47 @@ class LoginController extends Controller
             $response = ['success' => false, 'message' => 'Error: Unable to update user'];
             return response()->json($response, 500);
         }
+    }
+
+    //CHANGE PASSWORD
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            $response = ['success' => false, 'message' => 'User not found'];
+            return response()->json($response, 404);
+        }
+
+        if (!Hash::check($request->input('currentPassword'), $user->password)) {
+            $response = ['success' => false, 'message' => 'Current password is incorrect'];
+            return response()->json($response, 400);
+        }
+
+        // Validate the new password
+        // $request->validate([
+        //     'newPassword' => 'required|string|min:8|confirmed',
+        // ]);
+
+        $user->password = bcrypt($request->input('newPassword'));
+
+        if ($user->save()) {
+            $response = ['success' => true, 'message' => 'Password changed successfully'];
+            return response()->json($response, 200);
+        } else {
+            $response = ['success' => false, 'message' => 'Error: Unable to change password'];
+            return response()->json($response, 500);
+        }
+    }
+
+    //DEACTIVATE ACCOUNT
+    public function deactivateAccount(Request $request)
+    {
+        $user = $request->user();
+        User::where('id', $user->id)->delete(); 
+        $user->delete();
+
+        return response()->json(['success' => true, 'message' => 'Account deleted successfully']);
     }
 
     //LOGOUT

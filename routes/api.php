@@ -27,19 +27,11 @@ Route::post('/register', [LoginController::class, 'register']);
 // Route for user login
 Route::post('/login', [LoginController::class, 'login']);
 
-
-Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
-Route::middleware('auth:sanctum')->get('/getUser', [LoginController::class, 'getUser']);
-Route::middleware('auth:sanctum')->post('/updateUser', [LoginController::class, 'updateUser']);
-
-
-    Route::delete('/deleteexpense/{id}', [ExpenseController::class, 'destroy']);
-
-});
-
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/getUser', [LoginController::class, 'getUser']);
 Route::middleware('auth:sanctum')->post('/changePassword', [LoginController::class, 'changePassword']);
 Route::middleware('auth:sanctum')->post('/updateUser', [LoginController::class, 'updateUser']);
 Route::middleware('auth:sanctum')->post('/deactivateAccount', [LoginController::class, 'deactivateAccount']);
+
+
 
