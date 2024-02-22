@@ -101,5 +101,27 @@ class ExpenseController extends Controller
         // Return a success response
         return response()->json(['success' => true, 'message' => 'Expense updated successfully']);
     }
-    
+
+    public function destroy($id)
+{
+    // Check if the provided ID is a valid integer
+    if (!is_numeric($id) || $id <= 0) {
+        return response()->json(['success' => false, 'message' => 'Invalid expense ID'], 400);
+    }
+
+    // Find the expense by id
+    try {
+        $expense = Expense::findOrFail($id);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        // Handle the case where the expense with the given ID is not found
+        return response()->json(['success' => false, 'message' => 'Expense not found'], 404);
+    }
+
+    // Delete the expense
+    $expense->delete();
+
+    // Return a success response
+    return response()->json(['success' => true, 'message' => 'Expense deleted successfully']);
+}
+
 }
