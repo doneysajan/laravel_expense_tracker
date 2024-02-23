@@ -124,4 +124,24 @@ class ExpenseController extends Controller
     return response()->json(['success' => true, 'message' => 'Expense deleted successfully']);
 }
 
+
+
+   // In ExpenseController.php or your relevant controller file
+
+public function getFilteredExpenseData(Request $request)
+{
+    try {
+        $category = $request->input('category', ''); // Get the category from the request
+
+        // Query the database with the category filter
+        $expenses = Expense::when($category, function ($query) use ($category) {
+            return $query->where('maincategory', $category); // Assuming 'maincategory' is the correct column name
+        })->get();
+
+        return response()->json($expenses);
+    } catch (\Exception $e) {
+        // Handle exceptions if any
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
 }
