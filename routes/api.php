@@ -35,12 +35,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/listing', [ExpenseController::class, 'listing']);
     Route::put('/editexpenses/{id}', [ExpenseController::class, 'update']);
     Route::delete('/deleteexpense/{id}', [ExpenseController::class, 'destroy']);
+    Route::get('/getFilteredExpenseData', [ExpenseController::class, 'getFilteredExpenseData']);
 });
 
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/getUser', [LoginController::class, 'getUser']);
 Route::middleware('auth:sanctum')->post('/changePassword', [LoginController::class, 'changePassword']);
 Route::middleware('auth:sanctum')->post('/updateUser', [LoginController::class, 'updateUser']);
+Route::middleware('auth:sanctum')->post('/removeProfileImage', [LoginController::class, 'removeProfileImage']);
 Route::middleware('auth:sanctum')->post('/deactivateAccount', [LoginController::class, 'deactivateAccount']);
 
 
