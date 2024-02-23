@@ -35,7 +35,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/listing', [ExpenseController::class, 'listing']);
     Route::put('/editexpenses/{id}', [ExpenseController::class, 'update']);
     Route::delete('/deleteexpense/{id}', [ExpenseController::class, 'destroy']);
-    Route::get('/getFilteredExpenseData', [ExpenseController::class, 'getFilteredExpenseData']);
 });
 
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
