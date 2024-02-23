@@ -44,8 +44,16 @@ class LoginController extends Controller
 
             if (Auth::attempt($credentials)) {
                 $user = Auth::user();
-                $API=$user->createToken('API-Token', ['server:update'])->plainTextToken;
-                $response = ['success' => true,'user_id' => $user->id, 'fullname' => $user['fullname'], 'API_Token' => $API,'message' => 'Logged in'];
+                $API = $user->createToken('API-Token', ['server:update'])->plainTextToken;
+                $profileImgUrl = $user->profile ? url('uploads/profile/' . $user->profile) : null; // Construct profile image URL
+                $response = [
+                    'success' => true,
+                    'user_id' => $user->id,
+                    'fullname' => $user->fullname,
+                    'API_Token' => $API,
+                    'profileImgUrl' => $profileImgUrl, // Include profileImgUrl in the response
+                    'message' => 'Logged in'
+                ];
                 return response()->json($response, 200);
             } else {
                 $response = ['success' => false, 'message' => 'Incorrect email or password. Please try again.'];
@@ -56,6 +64,7 @@ class LoginController extends Controller
         $response = ['success' => false, 'message' => 'Invalid request.'];
         return response()->json($response, 400);
     }
+
     
     public function getUser(Request $request)
     {
@@ -72,7 +81,16 @@ class LoginController extends Controller
             $response = ['success' => false, 'message' => 'User not found'];
             return response()->json($response, 404);
         }
-        
+        $request->validate([
+            'profile' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048'
+        ]);
+        if ($request->hasFile('profile')) {
+            $file = $request->file('profile');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/profile/', $filename);
+        }
+
         // Update the user data
         $user->fullname = $request->input('fullname', $user->fullname);
         $user->email = $request->input('email', $user->email);
@@ -80,12 +98,44 @@ class LoginController extends Controller
         $user->address = $request->input('address', $user->address);
         $user->currency = $request->input('currency', $user->currency);
         $user->budget = $request->input('monthlybudget', $user->monthlybudget);
-        
+        $user->profile= $filename ?? null;
+
         if ($user->save()) {
             $response = ['success' => true, 'message' => 'User updated successfully', 'user' => $user];
             return response()->json($response, 200);
         } else {
             $response = ['success' => false, 'message' => 'Error: Unable to update user'];
+            return response()->json($response, 500);
+        }
+    }
+
+    //REMOVE PROFILEIMAGE
+    public function removeProfileImage(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            $response = ['success' => false, 'message' => 'User not found'];
+            return response()->json($response, 404);
+        }
+
+        // Delete the profile picture file from the server
+        if ($user->profile) {
+            $filePath = public_path('uploads/profile/' . $user->profile);
+            
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+
+        // Remove the profile picture reference from the database
+        $user->profile = null;
+
+        if ($user->save()) {
+            $response = ['success' => true, 'message' => 'Profile picture removed successfully'];
+            return response()->json($response, 200);
+        } else {
+            $response = ['success' => false, 'message' => 'Error: Unable to remove profile picture'];
             return response()->json($response, 500);
         }
     }

@@ -42,6 +42,7 @@ Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'log
 Route::middleware('auth:sanctum')->get('/getUser', [LoginController::class, 'getUser']);
 Route::middleware('auth:sanctum')->post('/changePassword', [LoginController::class, 'changePassword']);
 Route::middleware('auth:sanctum')->post('/updateUser', [LoginController::class, 'updateUser']);
+Route::middleware('auth:sanctum')->post('/removeProfileImage', [LoginController::class, 'removeProfileImage']);
 Route::middleware('auth:sanctum')->post('/deactivateAccount', [LoginController::class, 'deactivateAccount']);
 
 
