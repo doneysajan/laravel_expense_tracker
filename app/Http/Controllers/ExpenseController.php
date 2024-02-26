@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
 use App\Models\Expense;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\User; // Import the User model
@@ -104,65 +105,77 @@ class ExpenseController extends Controller
     }
 
     public function destroy($id)
-{
-    try {
-        $expense = Expense::findOrFail($id);
-        $expense->delete();
-        return response()->json(['success' => true, 'message' => 'Expense deleted successfully']);
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        // If the expense has already been deleted, return success message
-        return response()->json(['success' => true, 'message' => 'Expense has already been deleted'], 200);
-    } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-    }
-}
-
-
-public function getFilteredExpenseData(Request $request)
-{
-    try {
-        $user = auth()->user(); // Get the authenticated user
-        $category = $request->input('category', ''); // Get the category from the request
-        $startDate = $request->input('startDate', '');
-        $endDate = $request->input('endDate', '');
-
-        // Query the database with the category filter
-        $expenses = Expense::where('uid', $user->id) // Filter by user ID
-            ->when($category, function ($query) use ($category) {
-                return $query->where('maincategory', $category);
-            })->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
-                return $query->whereBetween('date', [$startDate, $endDate]);
-            })->get();
-
-        return response()->json($expenses);
-    } catch (\Exception $e) {
-        // Handle exceptions if any
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-}
-
-
-public function getSortedExpenseData(Request $request)
-{
-    try {
-        $user = auth()->user(); // Get the authenticated user
-        $sortOption = $request->input('sortOption', ''); // Get the sort option from the request
-
-        // Validate the sort option (optional, depending on your requirements)
-        $allowedSortOptions = ['date', 'maincategory', 'amount'];
-        if (!in_array($sortOption, $allowedSortOptions)) {
-            throw new \Exception('Invalid sort option');
+    {
+        try {
+            $expense = Expense::findOrFail($id);
+            $expense->delete();
+            return response()->json(['success' => true, 'message' => 'Expense deleted successfully']);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // If the expense has already been deleted, return success message
+            return response()->json(['success' => true, 'message' => 'Expense has already been deleted'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
-
-        // Query the database with the sort filter
-        $expenses = Expense::where('user_id', $user->id)
-            ->orderBy($sortOption) // Use the selected sort option
-            ->get();
-
-        return response()->json($expenses);
-    } catch (\Exception $e) {
-        // Handle exceptions if any
-        return response()->json(['error' => $e->getMessage()], 500);
     }
-}
+
+
+    public function getFilteredExpenseData(Request $request)
+    {
+        try {
+            $user = auth()->user(); // Get the authenticated user
+            $category = $request->input('category', ''); // Get the category from the request
+            $startDate = $request->input('startDate', '');
+            $endDate = $request->input('endDate', '');
+
+            // Query the database with the category filter
+            $expenses = Expense::where('uid', $user->id) // Filter by user ID
+                ->when($category, function ($query) use ($category) {
+                    return $query->where('maincategory', $category);
+                })->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                    return $query->whereBetween('date', [$startDate, $endDate]);
+                })->get();
+
+            return response()->json($expenses);
+        } catch (\Exception $e) {
+            // Handle exceptions if any
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+    public function getSortedExpenseData(Request $request)
+    {
+        try {
+            $user = auth()->user(); // Get the authenticated user
+            $sortOption = $request->input('sortOption', ''); // Get the sort option from the request
+
+            // Validate the sort option (optional, depending on your requirements)
+            $allowedSortOptions = ['date', 'maincategory', 'amount'];
+            if (!in_array($sortOption, $allowedSortOptions)) {
+                throw new \Exception('Invalid sort option');
+            }
+
+            // Query the database with the sort filter
+            $expenses = Expense::where('user_id', $user->id)
+                ->orderBy($sortOption) // Use the selected sort option
+                ->get();
+
+            return response()->json($expenses);
+        } catch (\Exception $e) {
+            // Handle exceptions if any
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    //GRAPH
+    public function graph(Request $request)
+    {
+        $graph = Expense::select('maincategory', DB::raw('SUM(amount) as total_amount'))
+            ->where('uid', $request->user()->id)
+            ->groupBy('maincategory')   
+            ->get();
+    
+        return $graph;
+    }
+    
 }

@@ -16,5 +16,5 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-public/uploads/expense
-public/uploads/profile
+public/uploads/expense/
+public/uploads/profile/
