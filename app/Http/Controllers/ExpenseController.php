@@ -9,17 +9,16 @@ use App\Models\Expense;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\User; // Import the User model
+use App\Models\User; 
 
 class ExpenseController extends Controller
 {
     public function store(Request $request)
     {
         $request->validate([
-            'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048', // Adjust max file size and allowed file types as needed
+            'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
         ]);
 
-        // Upload receipt
         if ($request->hasFile('receipt')) {
             $file = $request->file('receipt');
             $extension = $file->getClientOriginalExtension();
@@ -35,19 +34,29 @@ class ExpenseController extends Controller
         $merchantName = $request->input('merchantname');
         $notes = $request->input('notes');
 
+        $cid = null;
         if ($category == 'Others' && !empty($otherCategory)) {
-            $newCategory = new Category();
-            $newCategory->name = $otherCategory;
-            $newCategory->save();
-
-            $cid = $newCategory->id;
-
-            $expense = new Expense();
-            $expense->cid = $cid;
-        } else {
-            $expense = new Expense();
+            // Check if the category already exists
+            $existingCategory = Category::where('name', $otherCategory)->first();
+            if ($existingCategory) {
+                $cid = $existingCategory->id;
+            } else {
+                $newCategory = new Category();
+                $newCategory->name = $otherCategory;
+                $newCategory->uid = $request->user()->id; // Assuming categories are user-specific
+                $newCategory->save();
+                $cid = $newCategory->id;
+            }
+        } 
+        else {
+            
+            $existingCategory = Category::where('name', $category)->first();
+            if ($existingCategory) {
+                $cid = $existingCategory->id;
+            }
         }
 
+        $expense = new Expense();
         $expense->amount = $amount;
         $expense->date = $date;
         $expense->payment = $paymentMethod;
@@ -55,7 +64,8 @@ class ExpenseController extends Controller
         $expense->merchantname = $merchantName;
         $expense->notes = $notes;
         $expense->uid = $request->user()->id;
-        $expense->receipt = $filename ?? null; // Make sure to handle case when filename is not set
+        $expense->cid = $cid; // Set the category ID
+        $expense->receipt = $filename ?? null;
         $expense->save();
 
         return response()->json(['success' => true, 'message' => 'Expense added successfully']);
@@ -159,8 +169,6 @@ class ExpenseController extends Controller
         }
     }
     
-    
-
     //GRAPH
     public function graph(Request $request)
     {
@@ -171,5 +179,22 @@ class ExpenseController extends Controller
     
         return $graph;
     }
+
+    //LINEGRAPH -  weekly basis
+    public function line(Request $request)
+    {
+        $today = now()->format('Y-m-d');
     
+        $line = Expense::select(
+                    'maincategory',
+                    DB::raw('SUM(amount) as total_amount')
+                )
+                ->where('uid', $request->user()->id)
+                ->whereDate('date', $today)
+                ->groupBy('maincategory')
+                ->get();
+    
+        return $line;
+    }
+       
 }
