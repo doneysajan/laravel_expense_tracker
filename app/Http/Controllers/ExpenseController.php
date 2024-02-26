@@ -126,7 +126,7 @@ class ExpenseController extends Controller
             $category = $request->input('category', ''); // Get the category from the request
             $startDate = $request->input('startDate', '');
             $endDate = $request->input('endDate', '');
-
+    
             // Query the database with the category filter
             $expenses = Expense::where('uid', $user->id) // Filter by user ID
                 ->when($category, function ($query) use ($category) {
@@ -134,38 +134,32 @@ class ExpenseController extends Controller
                 })->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
                     return $query->whereBetween('date', [$startDate, $endDate]);
                 })->get();
-
+    
             return response()->json($expenses);
         } catch (\Exception $e) {
             // Handle exceptions if any
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
-
     public function getSortedExpenseData(Request $request)
     {
         try {
             $user = auth()->user(); // Get the authenticated user
-            $sortOption = $request->input('sortOption', ''); // Get the sort option from the request
-
-            // Validate the sort option (optional, depending on your requirements)
-            $allowedSortOptions = ['date', 'maincategory', 'amount'];
-            if (!in_array($sortOption, $allowedSortOptions)) {
-                throw new \Exception('Invalid sort option');
-            }
-
-            // Query the database with the sort filter
-            $expenses = Expense::where('user_id', $user->id)
-                ->orderBy($sortOption) // Use the selected sort option
+            $sortOption = $request->input('sortOption', 'asc'); // Get the sort option from the request, default to 'asc'
+    
+            // Query the database and order by amount based on the selected option
+            $expenses = Expense::where('uid', $user->id) // Filter by user ID
+                ->orderBy('amount', $sortOption) // Order by amount
                 ->get();
-
+    
             return response()->json($expenses);
         } catch (\Exception $e) {
             // Handle exceptions if any
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+    
+    
 
     //GRAPH
     public function graph(Request $request)
