@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
 use App\Models\Expense;
 use Illuminate\Support\Facades\Session;
@@ -14,7 +15,7 @@ class ExpenseController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'receipt' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048', // Adjust max file size and allowed file types as needed
+            'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048', // Adjust max file size and allowed file types as needed
         ]);
 
         // Upload receipt
@@ -117,18 +118,46 @@ class ExpenseController extends Controller
 }
 
 
-
-   // In ExpenseController.php or your relevant controller file
-
 public function getFilteredExpenseData(Request $request)
 {
     try {
+        $user = auth()->user(); // Get the authenticated user
         $category = $request->input('category', ''); // Get the category from the request
+        $startDate = $request->input('startDate', '');
+        $endDate = $request->input('endDate', '');
 
         // Query the database with the category filter
-        $expenses = Expense::when($category, function ($query) use ($category) {
-            return $query->where('maincategory', $category); // Assuming 'maincategory' is the correct column name
-        })->get();
+        $expenses = Expense::where('uid', $user->id) // Filter by user ID
+            ->when($category, function ($query) use ($category) {
+                return $query->where('maincategory', $category);
+            })->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                return $query->whereBetween('date', [$startDate, $endDate]);
+            })->get();
+
+        return response()->json($expenses);
+    } catch (\Exception $e) {
+        // Handle exceptions if any
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
+
+
+public function getSortedExpenseData(Request $request)
+{
+    try {
+        $user = auth()->user(); // Get the authenticated user
+        $sortOption = $request->input('sortOption', ''); // Get the sort option from the request
+
+        // Validate the sort option (optional, depending on your requirements)
+        $allowedSortOptions = ['date', 'maincategory', 'amount'];
+        if (!in_array($sortOption, $allowedSortOptions)) {
+            throw new \Exception('Invalid sort option');
+        }
+
+        // Query the database with the sort filter
+        $expenses = Expense::where('user_id', $user->id)
+            ->orderBy($sortOption) // Use the selected sort option
+            ->get();
 
         return response()->json($expenses);
     } catch (\Exception $e) {
