@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/getSortedExpenseData', [ExpenseController::class, 'getSortedExpenseData']);
     Route::get('/graph', [ExpenseController::class, 'graph']);
     Route::get('/line', [ExpenseController::class, 'line']);
+    Route::get('/bar', [ExpenseController::class, 'bar']);
 });
 
 Route::middleware('auth:sanctum')->post('/logout', [LoginController::class, 'logout']);
