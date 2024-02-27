@@ -196,5 +196,22 @@ class ExpenseController extends Controller
     
         return $line;
     }
+
+    //BARGRAPH - month over month
+    public function bar(Request $request)
+    {
+        $year = now()->year; // Consider expenses for the current year
+    
+        $bar = Expense::select(
+                DB::raw('MONTH(date) as month'),
+                DB::raw('SUM(amount) as total_amount')
+            )
+            ->where('uid', $request->user()->id)
+            ->whereYear('date', $year) // Filter by current year
+            ->groupBy('month')
+            ->get();
+    
+        return $bar;
+    }
        
 }
