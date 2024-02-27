@@ -139,12 +139,12 @@ class ExpenseController extends Controller
     
             // Query the database with the category filter
             $expenses = Expense::where('uid', $user->id) // Filter by user ID
-                ->when($category, function ($query) use ($category) {
-                    return $query->where('maincategory', $category);
-                })->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
-                    return $query->whereBetween('date', [$startDate, $endDate]);
-                })->get();
-    
+            ->when($category !== '' && $category !== 'all', function ($query) use ($category) {
+                return $query->where('maincategory', $category);
+            })->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                return $query->whereBetween('date', [$startDate, $endDate]);
+            })->get();
+            
             return response()->json($expenses);
         } catch (\Exception $e) {
             // Handle exceptions if any
