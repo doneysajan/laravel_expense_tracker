@@ -213,5 +213,22 @@ class ExpenseController extends Controller
     
         return $bar;
     }
-       
+
+    //DOUGHNUT GRAPH - Budget vs Actual Spending
+    public function doughnut(Request $request)
+    {
+        $monthlyBudget = User::where('id', $request->user()->id)->value('budget');
+        $totalActualSpending = Expense::where('uid', $request->user()->id)
+            ->whereYear('date', now()->year)
+            ->whereMonth('date', now()->month)
+            ->sum('amount');
+
+        $response = [
+            'monthly_budget' => $monthlyBudget,
+            'total_actual_spending' => $totalActualSpending,
+        ];
+
+        return response()->json($response);
+    }
+      
 }
