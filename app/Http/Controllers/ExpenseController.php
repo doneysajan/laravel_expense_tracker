@@ -233,36 +233,53 @@ class ExpenseController extends Controller
 
     //RADAR CHART - Budget vs Actual Spending for Different Categories
     public function radar(Request $request)
-{
-    $categories = ['Food', 'Fuel', 'Others', 'Rent', 'Electricity'];
-    $monthlyBudget = $request->user()->budget; // Assuming monthly budget is stored in user data under 'budget'
-    
-    // Allocate the same monthly budget to each category
-    $allocatedBudgets = array_fill_keys($categories, $monthlyBudget);
+    {
+        $categories = ['Food', 'Fuel', 'Others', 'Rent', 'Electricity'];
+        $monthlyBudget = $request->user()->budget; // Assuming monthly budget is stored in user data under 'budget'
+        
+        // Allocate the same monthly budget to each category
+        $allocatedBudgets = array_fill_keys($categories, $monthlyBudget);
 
-    // Fetch actual spending for each category
-    $actualSpending = [];
-    foreach ($categories as $category) {
-        $actualSpending[$category] = Expense::where('uid', $request->user()->id)
-            ->where('maincategory', $category)
-            ->whereYear('date', now()->year)
-            ->whereMonth('date', now()->month)
-            ->sum('amount');
+        // Fetch actual spending for each category
+        $actualSpending = [];
+        foreach ($categories as $category) {
+            $actualSpending[$category] = Expense::where('uid', $request->user()->id)
+                ->where('maincategory', $category)
+                ->whereYear('date', now()->year)
+                ->whereMonth('date', now()->month)
+                ->sum('amount');
+        }
+
+        // Total actual spending (sum of spending for all categories)
+        $totalActualSpending = array_sum($actualSpending);
+
+        // Prepare response data
+        $response = [
+            'monthly_budget' => $monthlyBudget,
+            'allocated_budgets' => $allocatedBudgets,
+            'actual_spending' => $actualSpending,
+            'total_actual_spending' => $totalActualSpending,
+        ];
+
+        return response()->json($response);
     }
 
-    // Total actual spending (sum of spending for all categories)
-    $totalActualSpending = array_sum($actualSpending);
-
-    // Prepare response data
-    $response = [
-        'monthly_budget' => $monthlyBudget,
-        'allocated_budgets' => $allocatedBudgets,
-        'actual_spending' => $actualSpending,
-        'total_actual_spending' => $totalActualSpending,
-    ];
-
-    return response()->json($response);
-}
-
+    //REPORTSCHART - past 3 months data
+    public function reports(Request $request)
+    {  
+        $threeMonthsAgo = now()->subMonths(3);
+        $today = now()->format('Y-m-d');
+        $expenses = Expense::select(
+                        'maincategory',
+                        DB::raw('MONTH(date) as month'),
+                        DB::raw('SUM(amount) as total_amount')
+                        )
+                    ->where('uid', $request->user()->id)
+                    ->whereBetween('date', [$threeMonthsAgo, $today])
+                    ->groupBy('maincategory', 'month')
+                    ->get();
+            
+        return $expenses;
+    }
     
 }    

@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bar', [ExpenseController::class, 'bar']);
     Route::get('/doughnut', [ExpenseController::class, 'doughnut']);
     Route::get('/budget', [ExpenseController::class, 'radar']);
+    Route::get('/reports', [ExpenseController::class, 'reports']);
 
 
 
