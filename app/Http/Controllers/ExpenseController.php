@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\User; 
+use Illuminate\Support\Facades\Mail; // Add this line to include Mail facade
+use App\Mail\Notification; 
 
 class ExpenseController extends Controller
 {
@@ -34,6 +36,7 @@ class ExpenseController extends Controller
         $merchantName = $request->input('merchantname');
         $notes = $request->input('notes');
 
+
         $cid = null;
         if ($category == 'Others' && !empty($otherCategory)) {
             // Check if the category already exists
@@ -55,6 +58,23 @@ class ExpenseController extends Controller
                 $cid = $existingCategory->id;
             }
         }
+
+        $currentMonthBudget = $request->user()->budget;
+
+    // Get the total expenses for the current month
+    $currentMonth = now()->format('Y-m');
+    $totalExpenses = DB::table('expenses')
+        ->where('uid', $request->user()->id)
+        ->whereYear('date', now()->year)
+        ->whereMonth('date', now()->month)
+        ->sum('amount');
+
+    // Check if the expense exceeds the monthly budget
+    if ($currentMonthBudget !== null && $totalExpenses + $amount > $currentMonthBudget) {
+        $email = Auth::user()->email;
+        Mail::to($email)->send(new Notification());
+    }
+        
 
         $expense = new Expense();
         $expense->amount = $amount;
