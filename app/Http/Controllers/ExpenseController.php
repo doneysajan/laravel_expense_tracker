@@ -230,5 +230,39 @@ class ExpenseController extends Controller
 
         return response()->json($response);
     }
-      
+
+    //RADAR CHART - Budget vs Actual Spending for Different Categories
+    public function radar(Request $request)
+{
+    $categories = ['Food', 'Fuel', 'Others', 'Rent', 'Electricity'];
+    $monthlyBudget = $request->user()->budget; // Assuming monthly budget is stored in user data under 'budget'
+    
+    // Allocate the same monthly budget to each category
+    $allocatedBudgets = array_fill_keys($categories, $monthlyBudget);
+
+    // Fetch actual spending for each category
+    $actualSpending = [];
+    foreach ($categories as $category) {
+        $actualSpending[$category] = Expense::where('uid', $request->user()->id)
+            ->where('maincategory', $category)
+            ->whereYear('date', now()->year)
+            ->whereMonth('date', now()->month)
+            ->sum('amount');
+    }
+
+    // Total actual spending (sum of spending for all categories)
+    $totalActualSpending = array_sum($actualSpending);
+
+    // Prepare response data
+    $response = [
+        'monthly_budget' => $monthlyBudget,
+        'allocated_budgets' => $allocatedBudgets,
+        'actual_spending' => $actualSpending,
+        'total_actual_spending' => $totalActualSpending,
+    ];
+
+    return response()->json($response);
 }
+
+    
+}    
