@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Route;
 // Route for user registration
 Route::post('/register', [LoginController::class, 'register']);      
 Route::post('/verifyotp', [LoginController::class, 'verifyotp']);      
+Route::post('/forgotpassword', [LoginController::class, 'forgotpassword']);      
 
 // Route for user login
 Route::post('/login', [LoginController::class, 'login']);

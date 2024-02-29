@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail; // Add this line to include Mail facade
 use App\Mail\Emailverification; 
+use App\Mail\ForgotPassword;
 
 class LoginController extends Controller
 {
@@ -121,6 +122,23 @@ class LoginController extends Controller
         $userData=User::where('id',$request->user()->id)->first();
         
         return response()->json($userData, 200);
+    }
+
+
+    public function forgotpassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+        $email = $request->input('email');
+
+        $user = User::where('email', $request->email)->first();
+
+        if ($user) {
+            Mail::to($email)->send(new ForgotPassword());
+            return response()->json(['message' => 'Email exist in the database', 'success' => true]);
+            
+        } else {
+            return response()->json(['message' => 'Email does not exist in the database', 'success' => false]);
+        }
     }
     
     public function updateUser(Request $request)
