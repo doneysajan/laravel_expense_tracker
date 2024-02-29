@@ -24,6 +24,7 @@ return new class extends Migration
             $table->integer('budget')->nullable();
             $table->string('password');
             $table->string('profile')->nullable();
+            $table->string('otp')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->string('status')->default('PENDING');

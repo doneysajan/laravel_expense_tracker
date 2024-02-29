@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\User; // Import the User model if not already imported
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail; // Add this line to include Mail facade
+use App\Mail\Emailverification; 
 
 class LoginController extends Controller
 {
@@ -20,12 +22,19 @@ class LoginController extends Controller
         // Hashing
         $hashedpassword = bcrypt($password); // Laravel helper function for password hashing
 
+        // Generate OTP
+        $otp = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
+
         // Perform the insertion into the 'users' table
         $user = new User();
         $user->fullname = $fullname;
         $user->email = $email;
         $user->phone = $mobile;
         $user->password = $hashedpassword;
+        $user->otp = $otp;
+
+        Mail::to($email)->send(new Emailverification($otp));
+
 
         if ($user->save()) {
             $response = ['success' => true, 'message' => 'User registered successfully'];
@@ -37,6 +46,35 @@ class LoginController extends Controller
     }
 
 
+    public function verifyOtp(Request $request)
+    {
+        // Get POST data from the client
+        $enteredOTP = $request->input('otp');
+        $email = $request->input('email');
+
+        // Fetch the stored OTP from the database
+        $user = User::where('email', $email)->first();
+
+        if ($user) {
+            $storedOTP = $user->otp;
+
+            // Compare entered OTP with stored OTP
+            if ($enteredOTP == $storedOTP) {
+                $user->status = 'VERIFIED';
+                $user->save();
+                return response()->json(['success' => true, 'message' => 'OTP verification successful!']);
+            } else {
+                // OTP verification failed
+                return response()->json(['success' => false, 'message' => 'OTP verification failed. Please try again.']);
+            }
+        } else {
+            // Email not found in the database
+            return response()->json(['success' => false, 'message' => 'Email not found in the database.']);
+        }
+    }
+
+    
+    
     public function login(Request $request)
     {
         if ($request->isMethod('post')) {
@@ -44,28 +82,40 @@ class LoginController extends Controller
 
             if (Auth::attempt($credentials)) {
                 $user = Auth::user();
-                $API = $user->createToken('API-Token', ['server:update'])->plainTextToken;
-                $profileImgUrl = $user->profile ? url('uploads/profile/' . $user->profile) : null; // Construct profile image URL
-                $response = [
-                    'success' => true,
-                    'user_id' => $user->id,
-                    'fullname' => $user->fullname,
-                    'API_Token' => $API,
-                    'profileImgUrl' => $profileImgUrl, // Include profileImgUrl in the response
-                    'message' => 'Logged in'
-                ];
-                return response()->json($response, 200);
+
+                // Check if the user's status is 'VERIFIED'
+                if ($user->status == 'VERIFIED') {
+                    $API = $user->createToken('API-Token', ['server:update'])->plainTextToken;
+                    $profileImgUrl = $user->profile ? url('uploads/profile/' . $user->profile) : null; // Construct profile image URL
+
+                    $response = [
+                        'success' => true,
+                        'user_id' => $user->id,
+                        'fullname' => $user->fullname,
+                        'API_Token' => $API,
+                        'profileImgUrl' => $profileImgUrl,
+                        'message' => 'Logged in'
+                    ];
+
+                    return response()->json($response, 200);
+                } else {
+                    // User's status is not 'VERIFIED'
+                    $response = ['success' => false, 'message' => 'Account not verified. Please verify your account.'];
+                    return response()->json($response, 401);
+                }
             } else {
+                // Incorrect email or password
                 $response = ['success' => false, 'message' => 'Incorrect email or password. Please try again.'];
                 return response()->json($response, 401);
             }
         }
 
+        // Invalid request
         $response = ['success' => false, 'message' => 'Invalid request.'];
         return response()->json($response, 400);
     }
 
-    
+
     public function getUser(Request $request)
     {
         $userData=User::where('id',$request->user()->id)->first();
@@ -82,7 +132,7 @@ class LoginController extends Controller
             return response()->json($response, 404);
         }
         $request->validate([
-            'profile' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048'
+            'profile' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:8000'
         ]);
         if ($request->hasFile('profile')) {
             $file = $request->file('profile');

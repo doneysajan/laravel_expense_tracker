@@ -29,6 +29,7 @@ class User extends Authenticatable
         'budget',
         'password',
         'profile',
+        'otp',
         'remember_token',
         'status'
     ];
