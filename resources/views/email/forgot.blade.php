@@ -6,6 +6,6 @@
     <title>Document</title>
 </head>
 <body>
-"http://127.0.0.1:5501/passwordreset.html"
+http://127.0.0.1:5501/passwordreset.html?email={{ $email }}
 </body>
 </html>

@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail; // Add this line to include Mail facade
 use App\Mail\Emailverification; 
 use App\Mail\ForgotPassword;
+use Illuminate\Support\Facades\Validator;
+
 
 class LoginController extends Controller
 {
@@ -133,7 +135,7 @@ class LoginController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if ($user) {
-            Mail::to($email)->send(new ForgotPassword());
+            Mail::to($email)->send(new ForgotPassword($email));
             return response()->json(['message' => 'Email exist in the database', 'success' => true]);
             
         } else {
@@ -141,6 +143,45 @@ class LoginController extends Controller
         }
     }
     
+    public function resetPassword(Request $request)
+{
+    // Validate the request data
+    $validator = Validator::make($request->all(), [
+        'email' => 'required|email',
+        'newPassword' => 'required|min:8',
+        'confirmPassword' => 'required|same:newPassword',
+    ]);
+
+    // If validation fails
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $validator->errors(),
+            'email' => $request->input('email') // Include email in the response
+        ], 422);
+    }
+
+    // Find the user by email
+    $user = User::where('email', $request->input('email'))->first();
+    
+    if (!$user) {
+        return response()->json(['success' => false, 'message' => 'User not found.'], 404);
+    }
+
+    // Update the user's password
+    $user->password = Hash::make($request->input('newPassword'));
+    $user->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Password updated successfully.',
+        'email' => $user->email // Include email in the response
+    ]);
+}
+
+
+
     public function updateUser(Request $request)
     {
         $user = $request->user();
